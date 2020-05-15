@@ -9,6 +9,7 @@ class UserForm extends StatefulWidget {
 }
 
 class _UserFormState extends State<UserForm> {
+  bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
 
   final Map<String, String> _formData = {};
@@ -39,11 +40,13 @@ class _UserFormState extends State<UserForm> {
         actions: <Widget>[
           IconButton(
               icon: Icon(Icons.save),
-              onPressed: () {
+              onPressed: () async {
                 final isValid = _formKey.currentState.validate();
                 if (isValid) {
                   _formKey.currentState.save();
-                  Provider.of<UserProvider>(context, listen: false).put(
+
+                  setState(() => _isLoading = true);
+                  await Provider.of<UserProvider>(context, listen: false).put(
                     UserModel(
                       id: _formData['id'],
                       name: _formData['name'],
@@ -51,42 +54,47 @@ class _UserFormState extends State<UserForm> {
                       avatarUrl: _formData['avatarUrl'],
                     ),
                   );
+                  setState(() => _isLoading = false);
                   Navigator.of(context).pop();
                 }
               }),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: <Widget>[
-              TextFormField(
-                initialValue: _formData['name'],
-                decoration: InputDecoration(labelText: 'Nome'),
-                validator: (value) {
-                  if (value.trim().isEmpty) {
-                    return 'Campo não pode ser vazio';
-                  }
-                  if (value.trim().length < 3) {
-                    return 'Não pode ser menor que 3 caracteres.';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _formData['name'] = value,
-              ),
-              TextFormField(
-                initialValue: _formData['email'],
-                decoration: InputDecoration(labelText: 'Email'),
-                onSaved: (value) => _formData['email'] = value,
-              ),
-              TextFormField(
-                initialValue: _formData['avatarUrl'],
-                decoration: InputDecoration(labelText: 'URL do Avatar'),
-                onSaved: (value) => _formData['avatarUrl'] = value,
-              ),
-            ],
+      body: Visibility(
+        visible: _isLoading,
+        child: Center(child: CircularProgressIndicator()),
+        replacement: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                TextFormField(
+                  initialValue: _formData['name'],
+                  decoration: InputDecoration(labelText: 'Nome'),
+                  validator: (value) {
+                    if (value.trim().isEmpty) {
+                      return 'Campo não pode ser vazio';
+                    }
+                    if (value.trim().length < 3) {
+                      return 'Não pode ser menor que 3 caracteres.';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _formData['name'] = value,
+                ),
+                TextFormField(
+                  initialValue: _formData['email'],
+                  decoration: InputDecoration(labelText: 'Email'),
+                  onSaved: (value) => _formData['email'] = value,
+                ),
+                TextFormField(
+                  initialValue: _formData['avatarUrl'],
+                  decoration: InputDecoration(labelText: 'URL do Avatar'),
+                  onSaved: (value) => _formData['avatarUrl'] = value,
+                ),
+              ],
+            ),
           ),
         ),
       ),
